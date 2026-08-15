@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang=zh-CN>
+<head>
+<meta charset=UTF-8>
+<meta name=viewport content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<meta name=theme-color content="#1a73e8">
+<meta name=apple-mobile-web-app-capable content=yes>
+<meta name=apple-mobile-web-app-status-bar-style content=black-translucent>
+<title>🏸 教练排课表</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{--primary:#1a73e8;--primary-dark:#1557b0;--primary-light:#e8f0fe;--danger:#ea4335;--success:#34a853;--warning:#f9ab00;--bg:#f5f7fa;--card-bg:#fff;--text:#202124;--text2:#5f6368;--border:#dadce0;--shadow:0 1px 3px rgba(0,0,0,.12);--radius:12px;--radius-sm:8px;--tw:60px;--hh:44px}
+html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans SC",sans-serif;font-size:14px;color:var(--text);background:var(--bg);overflow:hidden}
+#app{display:flex;flex-direction:column;height:100vh;height:100dvh;max-width:800px;margin:0 auto;position:relative}
+header{background:var(--primary);color:#fff;padding:8px 12px 0;flex-shrink:0}
+.h-top{display:flex;align-items:center;justify-content:space-between;padding-bottom:4px}
+.app-title{font-size:17px;font-weight:600}
+.date-nav{display:flex;align-items:center;justify-content:space-between;padding:4px 0}
+.date-display{font-size:15px;font-weight:500;text-align:center;flex:1}
+.nav-btn{background:rgba(255,255,255,.15);border:none;color:#fff;width:36px;height:36px;border-radius:50%;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.nav-btn:active{background:rgba(255,255,255,.3)}
+.view-tabs{display:flex;margin-top:4px}
+.tab{flex:1;text-align:center;padding:8px 0 10px;background:transparent;border:none;color:rgba(255,255,255,.7);font-size:13px;font-weight:500;cursor:pointer;position:relative}
+.tab.active{color:#fff}
+.tab.active::after{content:'';position:absolute;bottom:0;left:20%;right:20%;height:3px;background:#fff;border-radius:3px 3px 0 0}
+main{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;position:relative}
+.view{display:none;height:100%}.view.active{display:block}
+.sc{padding:0;position:relative}
+.ts{display:flex;align-items:stretch;min-height:var(--hh);border-bottom:1px solid var(--border)}
+.ts.hm{border-bottom:1px solid #bdbdbd}
+.tl{width:var(--tw);flex-shrink:0;padding:2px 4px;text-align:right;font-size:11px;color:var(--text2);font-weight:500;display:flex;align-items:flex-start;justify-content:flex-end;padding-top:2px}
+.tl .hl{font-size:10px;color:#9aa0a6;display:none}
+.ts:not(.hm) .tl .hl{display:inline}
+.sc-c{flex:1;min-height:var(--hh);position:relative;padding:2px 4px}
+.lc{position:absolute;left:2px;right:2px;border-radius:var(--radius-sm);padding:4px 8px;overflow:hidden;cursor:pointer;z-index:10;border-left:4px solid var(--primary);box-shadow:var(--shadow);transition:transform .1s;display:flex;flex-direction:column;justify-content:flex-start}
+.lc:active{transform:scale(.98)}
+.lc .ls{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lc .ltm{font-size:11px;opacity:.8}
+.lc .lty{font-size:10px;opacity:.7}
+.lc .llo{font-size:10px;opacity:.6}
+.c0{background:#e8f0fe;border-left-color:#1a73e8}.c1{background:#fce8e6;border-left-color:#ea4335}.c2{background:#e6f4ea;border-left-color:#34a853}.c3{background:#fef7e0;border-left-color:#fbbc04}.c4{background:#f3e8fd;border-left-color:#9334e6}.c5{background:#e0f7fa;border-left-color:#00acc1}.c6{background:#fbe9e7;border-left-color:#ff7043}.c7{background:#e8eaf6;border-left-color:#5c6bc0}
+.empty-s{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;color:var(--text2);text-align:center}
+.empty-s .ei{font-size:48px;margin-bottom:12px}
+.empty-s .et{font-size:15px}
+.wg{display:grid;grid-template-columns:repeat(7,1fr);gap:0;height:100%}
+.wd{border-right:1px solid var(--border);overflow-y:auto;min-height:100%}
+.wd:last-child{border-right:none}
+.wdh{text-align:center;padding:6px 2px;font-size:11px;font-weight:500;background:var(--card-bg);position:sticky;top:0;z-index:5;border-bottom:1px solid var(--border)}
+.wdh .wdn{color:var(--text2)}
+.wdh .wdd{font-size:16px;font-weight:700;display:block}
+.wd.today .wdh .wdd{color:var(--primary)}
+.wdc{padding:2px}
+.wl{padding:4px 6px;margin-bottom:2px;border-radius:4px;font-size:10px;border-left:3px solid var(--primary);cursor:pointer}
+.wl:active{opacity:.7}
+/* month view */
+.mg{display:grid;grid-template-columns:repeat(7,1fr);gap:0;height:100%}
+.mwh{text-align:center;padding:6px 2px;font-size:11px;font-weight:500;color:var(--text2);background:var(--card-bg);position:sticky;top:0;z-index:5;border-bottom:1px solid var(--border)}
+.md{min-height:70px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);padding:2px;cursor:pointer;overflow:hidden}
+.md:nth-child(7n){border-right:none}
+.md.empty{background:#fafafa;cursor:default}
+.md.today{background:var(--primary-light)}
+.md.today .mdn{background:var(--primary);color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center}
+.mdn{font-size:12px;font-weight:600;padding:2px 4px;color:var(--text)}
+.mlc{display:flex;flex-direction:column;gap:1px;margin-top:2px}
+.mli{padding:1px 3px;border-radius:3px;font-size:8px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.4}
+footer{flex-shrink:0;padding:8px 16px;background:var(--card-bg);border-top:1px solid var(--border)}
+.fb{width:100%;padding:12px;background:var(--primary);color:#fff;border:none;border-radius:var(--radius-sm);font-size:15px;font-weight:600;cursor:pointer}
+.fb:active{background:var(--primary-dark)}
+.sm{position:fixed;top:0;left:0;right:0;bottom:0;z-index:100}
+.sm.h{display:none}
+.mo{position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.4);animation:fi .2s}
+.mc{position:absolute;top:0;left:0;bottom:0;width:280px;background:var(--card-bg);box-shadow:2px 0 12px rgba(0,0,0,.15);display:flex;flex-direction:column;animation:si .2s}
+.mh{display:flex;align-items:center;justify-content:space-between;padding:16px;border-bottom:1px solid var(--border)}
+.mh h2{font-size:18px}
+.mb{flex:1;overflow-y:auto;padding:12px 16px}
+.ms{margin-bottom:20px}
+.ms h3{font-size:12px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.mb-btn,.smi{display:block;width:100%;text-align:left;padding:10px 8px;background:none;border:none;font-size:14px;color:var(--text);border-radius:var(--radius-sm);cursor:pointer}
+.mb-btn:active,.smi:active{background:var(--primary-light)}
+.mo2{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.4);z-index:200;display:flex;align-items:center;justify-content:center;padding:16px;animation:fi .2s}
+.mo2.h{display:none}
+.modal{background:var(--card-bg);border-radius:var(--radius);width:100%;max-width:420px;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 8px 32px rgba(0,0,0,.2);animation:su .25s}
+.mhdr{display:flex;align-items:center;justify-content:space-between;padding:16px;border-bottom:1px solid var(--border)}
+.mhdr h2{font-size:16px;font-weight:600}
+.mbd{padding:16px;overflow-y:auto;flex:1}
+.mft{display:flex;align-items:center;padding:12px 16px;border-top:1px solid var(--border);gap:8px}
+.mft .sp{flex:1}
+.ic{background:none;border:none;font-size:20px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:50%;cursor:pointer;color:inherit}
+.ic:active{background:rgba(0,0,0,.1)}
+.fg{margin-bottom:14px}
+.fg label{display:block;font-size:13px;font-weight:500;color:var(--text2);margin-bottom:4px}
+.fg .rq{color:var(--danger)}
+i[type=text],i[type=date],i[type=time],i[type=number],select,textarea{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:14px;font-family:inherit;background:var(--card-bg);color:var(--text);-webkit-appearance:none;appearance:none}
+i:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 2px rgba(26,115,232,.2)}
+.ir{display:flex;gap:8px}.ir i{flex:1}
+.si{display:flex;align-items:center;justify-content:space-between;padding:10px 8px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.si:last-child{border-bottom:none}
+.si-info{flex:1;min-width:0}
+.si-name{font-size:14px;font-weight:500}
+.si-detail{font-size:12px;color:var(--text2);margin-top:2px}
+.si-remain{font-size:13px;font-weight:700;color:var(--primary);margin:0 8px}
+.del-btn{background:none;border:none;color:var(--danger);font-size:20px;cursor:pointer;padding:4px 8px;border-radius:4px}
+.del-btn:active{background:#fce8e6}
+.btn{padding:10px 20px;border:none;border-radius:var(--radius-sm);font-size:14px;font-weight:600;cursor:pointer}
+.btn:active{opacity:.8}
+.btn-p{background:var(--primary);color:#fff}
+.btn-s{background:#f1f3f4;color:var(--text)}
+.btn-d{background:none;color:var(--danger)}
+.btn-d:active{background:#fce8e6}
+.btn-sm{padding:6px 12px;font-size:12px}
+.cb-row{display:flex;align-items:center;gap:8px;padding:4px 0}
+.cb-row input[type=checkbox]{width:18px;height:18px;accent-color:var(--primary);cursor:pointer}
+.cb-row label{font-size:14px;cursor:pointer;color:var(--text)}
+/* reminder banner */
+.rmb{background:#fef7e0;border:1px solid #f9ab00;border-radius:8px;padding:8px 12px;margin:8px 12px;display:flex;align-items:center;gap:8px;font-size:13px;animation:fi .3s;cursor:pointer}
+.rmb .rmb-icon{font-size:18px;flex-shrink:0}
+.rmb .rmb-text{flex:1;color:#5f3b00}
+.rmb .rmb-close{background:none;border:none;font-size:16px;cursor:pointer;color:#9aa0a6;padding:4px}
+.rmb:active{opacity:.8}
+/* stats */
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
+.stat-card{background:var(--primary-light);border-radius:8px;padding:12px;text-align:center}
+.stat-card .stat-val{font-size:20px;font-weight:700;color:var(--primary)}
+.stat-card .stat-lb{font-size:11px;color:var(--text2);margin-top:2px}
+.stat-card.green{background:#e6f4ea}.stat-card.green .stat-val{color:var(--success)}
+.stat-card.orange{background:#fef7e0}.stat-card.orange .stat-val{color:var(--warning)}
+.stat-card.red{background:#fce8e6}.stat-card.red .stat-val{color:var(--danger)}
+.stat-period{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.stat-period .btn{flex:1;text-align:center;padding:8px;font-size:12px}
+.stat-breakdown{margin-top:12px}
+.stat-breakdown h4,.stat-chart-wrap h4{font-size:13px;color:var(--text2);margin-bottom:8px}
+.stats-date-range{display:flex;align-items:center;margin-top:8px;margin-bottom:12px;gap:0}
+.stat-row{display:flex;justify-content:space-between;padding:6px 0;font-size:13px;border-bottom:1px solid var(--border)}
+.stat-row:last-child{border-bottom:none}
+.stat-row .stat-name{font-weight:500}
+.stat-row .stat-val2{color:var(--text2)}
+/* stamp in lesson card for fee */
+.lc .lfee{font-size:10px;opacity:.7;margin-top:1px}
+.lc .ldeduct{font-size:9px;color:var(--success);font-weight:600}
+@keyframes fi{from{opacity:0}to{opacity:1}}
+@keyframes si{from{transform:translateX(-100%)}to{transform:translateX(0)}}
+@keyframes su{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.8);color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;z-index:999;animation:fi .2s;pointer-events:none;white-space:nowrap}
+@media(max-width:360px){:root{--tw:50px;--hh:40px}.lc .ls{font-size:12px}}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:#ccc;border-radius:2px}
+</style>
+<link rel=manifest href=manifest.json>
+<meta name=mobile-web-app-capable content=yes>
+<script>
+if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js').catch(function(){});
+let deferredPrompt;window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e});
+</script>
+</head>
+<body>
+<div id="app">
+<header>
+<div class="h-top">
+<button class="ic" id="menu-btn">☰</button>
+<h1 class="app-title">🏸 教练排课表</h1>
+<button class="ic" id="today-btn">📅</button>
+</div>
+<div class="date-nav">
+<button class="nav-btn" id="prev-day">◀</button>
+<div class="date-display" id="date-display"></div>
+<button class="nav-btn" id="next-day">▶</button>
+</div>
+<div class="view-tabs">
+<button class="tab active" data-v="day">日视图</button>
+<button class="tab" data-v="week">周视图</button>
+<button class="tab" data-v="month">月视图</button>
+</div>
+</header>
+<div id="reminder-banner" style="display:none"></div>
+<main id="main-content">
+<div id="day-view" class="view active"><div class="sc" id="sc"></div></div>
+<div id="week-view" class="view"><div class="wg" id="wg"></div></div>
+<div id="month-view" class="view"><div class="mg" id="mg"></div></div>
+</main>
+<footer><button class="fb" id="add-btn">＋ 添加课程</button></footer>
+</div>
+
+<!-- 侧边菜单 -->
+<nav id="sm" class="sm h">
+<div class="mo" id="sm-overlay"></div>
+<div class="mc">
+<div class="mh"><h2>🏸 菜单</h2><button class="ic" id="close-sm">✕</button></div>
+<div class="mb">
+<div class="ms"><h3 style="cursor:pointer;display:flex;align-items:center;justify-content:space-between" id="stu-menu-toggle">学员列表 <span id="stu-menu-summary" style="font-size:12px;color:var(--text2);font-weight:400"></span></h3><div id="stu-menu-list" style="display:none"></div></div>
+<div class="ms">
+<h3>管理</h3>
+<button class="mb-btn" id="m-students">👤 管理学员</button>
+<button class="mb-btn" id="m-time">⏰ 设置上课时段</button>
+<button class="mb-btn" id="m-venue">🏟️ 场地费管理</button>
+<button class="mb-btn" id="m-stats">📊 收益统计</button>
+<button class="mb-btn" id="m-export">📤 导出课表</button>
+<button class="mb-btn" id="m-import">📥 导入课表</button>
+<button class="mb-btn" id="m-test-data">🧪 导入测试数据</button>
+<button class="mb-btn" id="m-ical">📅 导出日历(.ics)</button>
+<button class="mb-btn" id="m-clear">🗑️ 清空所有数据</button>
+</div>
+<div class="ms"><small data-keep>数据自动保存在手机本地</small><div id="backup-status" style="font-size:12px;color:var(--text2);margin-top:4px"></div></div>
+</div>
+</div>
+</nav>
+
+<!-- 添加/编辑课程弹窗 -->
+<div id="lesson-mo" class="mo2 h">
+<div class="modal">
+<div class="mhdr"><h2 id="lesson-title">添加课程</h2><button class="ic" id="close-lesson">✕</button></div>
+<div class="mbd">
+<form id="lesson-form">
+<input type=hidden id="lid">
+<div class="fg"><label>日期</label><input type=date id="l-date" required></div>
+<div class="ir"><div class="fg" style="flex:1"><label>开始时间</label><input type=time id="l-start" step=1800 required></div><div class="fg" style="flex:1"><label>结束时间</label><input type=time id="l-end" step=1800 required></div></div>
+<div class="fg"><label>学员姓名 <span class="rq">*</span></label><input type=text id="l-student" list="stu-list" placeholder="输入学员姓名" required><datalist id="stu-list"></datalist></div>
+<div class="fg"><label>课程类型</label><select id="l-type"><option>一对一</option><option>一对二</option><option>小班课(3-4人)</option><option>大班课(5-8人)</option><option>体验课</option><option>其他</option></select></div>
+<div class="fg"><label>上课地点</label><input type=text id="l-location" placeholder="如：A馆3号场" list="loc-list"><datalist id="loc-list"></datalist></div>
+<div class="ir"><div class="fg" style="flex:1"><label>课时费 (元)</label><input type=number id="l-fee" min=0 step=10 placeholder="0"></div><div class="fg" style="flex:1"><label>场地费 (元)</label><input type=number id="l-venue-fee" min=0 step=5 placeholder="0" list="vfee-list"><datalist id="vfee-list"></datalist></div></div>
+<div class="cb-row"><input type=checkbox id="l-deducted" checked><label for="l-deducted">消耗该学员1课时</label></div>
+<div class="fg"><label>备注</label><textarea id="l-notes" rows=2 placeholder="学员联系方式、注意事项等"></textarea></div>
+<div class="fg" id="recurring-fg" style="display:none"><label>重复添加</label><div style="display:flex;gap:8px"><select id="l-recurring" style="flex:1"><option value="0">不重复</option><option value="2">重复2周（共3节）</option><option value="4" selected>重复4周（共5节）</option><option value="6">重复6周（共7节）</option><option value="8">重复8周（共9节）</option><option value="12">重复12周（共13节）</option><option value="-1">自定义</option></select><input type=number id="l-recur-custom" min=1 max=52 value=4 style="width:60px;display:none" placeholder="周"></div></div>
+</form>
+</div>
+<div class="mft">
+<button class="btn btn-d" id="del-lesson-btn" style="display:none" type="button">删除课程</button>
+<div class="sp"></div>
+<button class="btn btn-s" id="cancel-lesson" type="button">取消</button>
+<button class="btn btn-p" id="save-lesson" type="button">保存</button>
+</div>
+</div>
+</div>
+
+<!-- 管理学员弹窗 -->
+<div id="stu-mo" class="mo2 h">
+<div class="modal">
+<div class="mhdr"><h2>管理学员</h2><button class="ic" id="close-stu">✕</button></div>
+<div class="mbd">
+<div style="margin-bottom:12px"><div class="ir"><input type=text id="new-stu-name" placeholder="学员姓名"><input type=number id="new-stu-lessons" placeholder="总课时" min=0 style="width:80px"><input type=number id="new-stu-price" placeholder="课时费" min=0 style="width:80px"><button class="btn btn-p btn-sm" id="add-stu-btn">添加</button></div></div>
+<div id="stu-list-ct"></div>
+</div>
+</div>
+</div>
+
+<!-- 时间设置弹窗 -->
+<div id="time-mo" class="mo2 h">
+<div class="modal">
+<div class="mhdr"><h2>设置上课时段</h2><button class="ic" id="close-time">✕</button></div>
+<div class="mbd">
+<div class="fg"><label>每天开始时间</label><input type=time id="t-start" value="06:00" step=1800></div>
+<div class="fg"><label>每天结束时间</label><input type=time id="t-end" value="22:00" step=1800></div>
+<button class="btn btn-p" id="save-time">保存</button>
+</div>
+</div>
+</div>
+
+<!-- 场地费管理弹窗 -->
+<div id="venue-mo" class="mo2 h">
+<div class="modal">
+<div class="mhdr"><h2>场地费管理</h2><button class="ic" id="close-venue">✕</button></div>
+<div class="mbd">
+<div class="fg"><div class="ir"><input type=text id="v-name" placeholder="场地名称(如A馆)"><input type=number id="v-price" placeholder="费用" min=0 style="width:80px"><button class="btn btn-p btn-sm" id="add-v-btn">添加</button></div></div>
+<div id="v-list"></div>
+</div>
+</div>
+</div>
+
+<!-- 收益统计弹窗 -->
+<div id="stats-mo" class="mo2 h">
+<div class="modal" style="max-width:480px">
+<div class="mhdr"><h2>📊 收益统计</h2><button class="ic" id="close-stats">✕</button></div>
+<div class="mbd">
+<div class="stats-period">
+<button class="btn btn-p btn-sm" data-period="week">本周</button>
+<button class="btn btn-s btn-sm" data-period="month">本月</button>
+<button class="btn btn-s btn-sm" data-period="3month">近3个月</button>
+<button class="btn btn-s btn-sm" data-period="custom">自定义</button>
+</div>
+<div class="stats-date-range">
+<input type="date" id="st-start" onchange="onCustomDateChange()" style="flex:1;padding:4px 6px;border:1px solid #dadce0;border-radius:6px;font-size:13px">
+<span style="color:var(--text2);padding:0 4px">～</span>
+<input type="date" id="st-end" onchange="onCustomDateChange()" style="flex:1;padding:4px 6px;border:1px solid #dadce0;border-radius:6px;font-size:13px">
+</div>
+<div class="stats-grid">
+<div class="stat-card"><div class="stat-val" id="st-count">0</div><div class="stat-lb">课程总数</div></div>
+<div class="stat-card green"><div class="stat-val" id="st-fee">¥0</div><div class="stat-lb">课时费收入</div></div>
+<div class="stat-card orange"><div class="stat-val" id="st-venue">¥0</div><div class="stat-lb">场地费支出</div></div>
+<div class="stat-card"><div class="stat-val" id="st-net">¥0</div><div class="stat-lb">净收入</div></div>
+</div>
+<div class="stat-breakdown"><h4>按学员明细</h4><div id="st-breakdown"></div></div>
+<div class="stat-chart-wrap" style="margin-top:12px"><h4 style="margin:0 0 6px 0">收益曲线</h4><canvas id="st-chart"></canvas></div>
+</div>
+</div>
+</div>
+
+<!-- 导入弹窗 -->
+<div id="import-mo" class="mo2 h">
+<div class="modal">
+<div class="mhdr"><h2>导入课表</h2><button class="ic" id="close-import">✕</button></div>
+<div class="mbd">
+<div class="fg"><label>选择备份文件(.json)</label><input type=file id="import-file" accept=".json,application/json" style="padding:6px;font-size:13px"></div>
+<div style="text-align:center;color:var(--text2);font-size:12px;margin:4px 0 8px">— 或者手动粘贴 —</div>
+<div class="fg"><label>粘贴备份数据</label><textarea id="import-data" rows=5 placeholder="或选择上方文件，自动读取..."></textarea></div>
+<button class="btn btn-p" id="confirm-import">导入</button>
+</div>
+</div>
+</div>
+
+<script>
+// ==================== 数据层 ====================
+const DK='coach_schedule_data',SK='coach_students',SETK='coach_settings',VK='coach_venues';
+const defSet={dayStart:'06:00',dayEnd:'22:00'};
+function gL(){try{return JSON.parse(localStorage.getItem(DK))||{}}catch(e){return{}}}
+function gDL(d){return(gL()[d]||[])}
+function sL(l){localStorage.setItem(DK,JSON.stringify(l))}
+// 学员: 旧格式 [string] 自动迁移为 [{name,totalLessons,usedLessons,pricePerLesson}]
+function gS(){try{const r=JSON.parse(localStorage.getItem(SK))||[];if(r.length&&typeof r[0]==='string'){const m=r.map(n=>({name:n,totalLessons:0,usedLessons:0,pricePerLesson:0}));sS(m);return m}return r}catch(e){return[]}}
+function sS(s){localStorage.setItem(SK,JSON.stringify(s))}
+function gSt(n){const s=gS();return s.find(x=>x.name===n)}
+function updSt(n,u){const s=gS();const i=s.findIndex(x=>x.name===n);if(i>-1){s[i]={...s[i],...u};sS(s)}}
+function gSet(){try{return{...defSet,...JSON.parse(localStorage.getItem(SETK))}}catch(e){return{...defSet}}}
+function sSet(s){localStorage.setItem(SETK,JSON.stringify(s))}
+// 场地费
+function gVF(){try{return JSON.parse(localStorage.getItem(VK))||[]}catch(e){return[]}}
+function sVF(v){localStorage.setItem(VK,JSON.stringify(v))}
+function gid(){return Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,6)}
+function fD(d){const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),dd=String(d.getDate()).padStart(2,'0');return y+'-'+m+'-'+dd}
+function fDisp(s){const d=new Date(s+'T00:00:00'),wd=['日','一','二','三','四','五','六'];const y=d.getFullYear(),m=d.getMonth()+1,dd=d.getDate(),w=wd[d.getDay()];const t=fD(new Date());return s===t?y+'年'+m+'月'+dd+'日 周'+w+' (今天)':y+'年'+m+'月'+dd+'日 周'+w}
+function t2m(t){const[h,m]=t.split(':').map(Number);return h*60+m}
+function m2t(m){const h=Math.floor(m/60),min=m%60;return String(h).padStart(2,'0')+':'+String(min).padStart(2,'0')}
+function r2h(t){const min=t2m(t),r=Math.round(min/30)*30;return m2t(r)}
+function gC(n,s){const i=s.findIndex(x=>x.name===n);return i===-1?0:i%8}
+const BC=['#1a73e8','#ea4335','#34a853','#fbbc04','#9334e6','#00acc1','#ff7043','#5c6bc0'];
+const BG=['#e8f0fe','#fce8e6','#e6f4ea','#fef7e0','#f3e8fd','#e0f7fa','#fbe9e7','#e8eaf6'];
+
+// ==================== 状态 ====================
+let curDate=fD(new Date()),curView='day',editingId=null;
+const $=id=>document.getElementById(id);
+
+// ==================== 提醒横幅 ====================
+function chkReminder(){
+  const ct=new Date();const cts=String(ct.getHours()).padStart(2,'0')+':'+String(ct.getMinutes()).padStart(2,'0');
+  const cmin=t2m(cts);const all=gL();const td=fD(ct);const lessons=all[td]||[];
+  const soon=lessons.filter(l=>{const lm=t2m(l.startTime);return lm>cmin&&lm<=cmin+60});
+  const rb=$('reminder-banner');
+  if(soon.length===0){rb.style.display='none';return}
+  soon.sort((a,b)=>a.startTime.localeCompare(b.startTime));
+  const l=soon[0];const min=Math.round((t2m(l.startTime)-cmin));
+  rb.style.display='block';
+  rb.className='rmb';
+  rb.innerHTML='<span class="rmb-icon">🔔</span><span class="rmb-text"><strong>'+esc(l.student)+'</strong> 将在 '+min+' 分钟后上课 ('+l.startTime+')'+(l.location?' 📍'+esc(l.location):'')+'</span><button class="rmb-close" id="rmb-close">✕</button>';
+  setTimeout(()=>{$('rmb-close')?.addEventListener('click',e=>{e.stopPropagation();rb.style.display='none'})},0);
+  rb.addEventListener('click',()=>{curDate=td;swDay();});
+  // 震动提醒（如果有权限）
+  try{if(navigator.vibrate)navigator.vibrate(200)}catch(e){}
+}
+
+// ==================== 渲染 日视图 ====================
+function rDay(){
+  const set=gSet(),ds=t2m(set.dayStart),de=t2m(set.dayEnd),ts=(de-ds)/30;
+  const ls=gDL(curDate),st=gS(),sc=$('sc');
+  $('date-display').textContent=fDisp(curDate);
+  chkReminder();
+  sc.innerHTML='';
+  if(ls.length===0&&ts>0){sc.innerHTML='<div class="empty-s"><div class="ei">🏸</div><div class="et">今天还没有课程<br>点击下方「添加课程」来排课吧</div></div>'}
+  for(let i=0;i<ts;i++){const sm=ds+i*30,ts2=m2t(sm),ih=sm%60===0;const sl=document.createElement('div');sl.className='ts'+(ih?' hm':'');sl.dataset.time=ts2;const lb=document.createElement('div');lb.className='tl';lb.innerHTML=ih?ts2.split(':')[0]+':00':'<span class="hl">'+ts2+'</span>';sl.appendChild(lb);const ct=document.createElement('div');ct.className='sc-c';sl.appendChild(ct);sc.appendChild(sl)}
+  ls.forEach(l=>{const sm=t2m(l.startTime),em=t2m(l.endTime),dur=em-sm,sl2=dur/30;const ss=(sm-ds)/30;if(ss<0||ss>=ts)return;const se=sc.querySelectorAll('.sc-c');if(ss>=se.length)return;const ci=gC(l.student,st);const cd=document.createElement('div');cd.className='lc c'+ci;const h=sl2*44-4;cd.style.cssText='top:2px;height:'+h+'px;min-height:'+h+'px;background:'+BG[ci]+';border-left-color:'+BC[ci];const sd=sl2>=1.5;let htm='<div class="ls">'+esc(l.student)+'</div>'+(sd?'<div class="ltm">'+l.startTime+' - '+l.endTime+'</div>':'');if(l.deducted)htm+='<div class="ldeduct">✓ 已划课时</div>';if(l.fee>0||l.venueFee>0)htm+='<div class="lfee">'+(l.fee>0?'¥'+l.fee:'')+(l.fee>0&&l.venueFee>0?' + ':'')+(l.venueFee>0?'场地¥'+l.venueFee:'')+'</div>';htm+=(sd&&l.type?'<div class="lty">'+esc(l.type)+'</div>':'')+(sd&&l.location?'<div class="llo">📍'+esc(l.location)+'</div>':'');cd.innerHTML=htm;cd.dataset.lid=l.id;cd.addEventListener('click',()=>openEdit(l.id));se[ss].appendChild(cd)})
+}
+
+// ==================== 渲染 周视图 ====================
+function rWeek(){
+  const wg=$('wg');wg.innerHTML='';
+  const t=new Date(curDate+'T00:00:00'),dw=t.getDay(),ws=new Date(t);
+  ws.setDate(t.getDate()-dw);
+  const wd=['日','一','二','三','四','五','六'],all=gL(),st=gS(),tStr=fD(new Date());
+  // Update date display: 2026年8月 第3周
+  const we=new Date(ws);we.setDate(ws.getDate()+6);
+  const wm=ws.getMonth(),ym=ws.getFullYear();
+  const weekNum=Math.ceil((ws.getDate()+new Date(ym,wm,1).getDay())/7);
+  $('date-display').textContent=ym+'年'+(wm+1)+'月 第'+weekNum+'周';
+  for(let i=0;i<7;i++){const d2=new Date(ws);d2.setDate(ws.getDate()+i);const ds=fD(d2);const dl2=all[ds]||[];const col=document.createElement('div');col.className='wd'+(ds===tStr?' today':'');const hdr=document.createElement('div');hdr.className='wdh';hdr.innerHTML='<div class="wdn">周'+wd[i]+'</div><span class="wdd">'+d2.getDate()+'</span>';col.appendChild(hdr);const ct=document.createElement('div');ct.className='wdc';if(dl2.length===0){const e=document.createElement('div');e.style.cssText='padding:8px 4px;font-size:10px;color:#9aa0a6;text-align:center';e.textContent='无课程';ct.appendChild(e)}else{dl2.sort((a,b)=>a.startTime.localeCompare(b.startTime));dl2.forEach(l=>{const ci=gC(l.student,st);const el=document.createElement('div');el.className='wl';el.style.borderLeftColor=BC[ci];el.innerHTML='<strong>'+esc(l.student)+'</strong><div>'+l.startTime+(l.fee>0?' ¥'+l.fee:'')+(l.location?' 📍'+esc(l.location):'')+'</div>';el.dataset.date=ds;el.dataset.lid=l.id;el.addEventListener('click',()=>{curDate=ds;swDay();openEdit(l.id)});ct.appendChild(el)})}col.appendChild(ct);wg.appendChild(col)}
+}
+
+// ==================== 渲染 月视图 ====================
+function rMonth(){
+  const mg=$('mg');mg.innerHTML='';
+  const t=new Date(curDate+'T00:00:00'),y=t.getFullYear(),m=t.getMonth();
+  const fd=new Date(y,m,1),ld=new Date(y,m+1,0);
+  const fw=fd.getDay(),totalDays=ld.getDate(),prevDays=new Date(y,m,0).getDate();
+  const all=gL(),st=gS(),tStr=fD(new Date());
+  const wd=['日','一','二','三','四','五','六'];
+  $('date-display').textContent=y+'年'+(m+1)+'月';
+  // Weekday headers
+  wd.forEach(w=>{const h=document.createElement('div');h.className='mwh';h.textContent=w;mg.appendChild(h)});
+  // Empty cells before first day
+  for(let i=0;i<fw;i++){const e=document.createElement('div');e.className='md empty';mg.appendChild(e)}
+  // Day cells
+  for(let d=1;d<=totalDays;d++){
+    const ds=y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    const cell=document.createElement('div');cell.className='md'+(ds===tStr?' today':'');
+    const n=document.createElement('div');n.className='mdn';n.textContent=d;cell.appendChild(n);
+    const dl2=all[ds]||[];
+    if(dl2.length>0){const ct=document.createElement('div');ct.className='mlc';dl2.slice(0,4).forEach(l=>{const ci=gC(l.student,st);const e2=document.createElement('div');e2.className='mli';e2.style.background=BC[ci];e2.textContent=l.startTime+' '+l.student;e2.title=l.startTime+' - '+l.endTime+' '+l.student+(l.location?' @'+l.location:'');ct.appendChild(e2)});if(dl2.length>4){const mo=document.createElement('div');mo.style.cssText='font-size:8px;color:var(--primary);font-weight:600';mo.textContent='+'+ (dl2.length-4) +'节';ct.appendChild(mo)}cell.appendChild(ct)}
+    cell.addEventListener('click',()=>{curDate=ds;swDay()});
+    mg.appendChild(cell)
+  }
+}
+
+// ==================== 视图切换 ====================
+function swDay(){curView='day';document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.querySelector('.tab[data-v="day"]').classList.add('active');document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));$('day-view').classList.add('active');rDay()}
+function swWeek(){curView='week';document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.querySelector('.tab[data-v="week"]').classList.add('active');document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));$('week-view').classList.add('active');rWeek()}
+function swMonth(){curView='month';document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.querySelector('.tab[data-v="month"]').classList.add('active');document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));$('month-view').classList.add('active');rMonth()}
+
+// ==================== CRUD ====================
+function addL(l){const a=gL();const d=l.date;if(!a[d])a[d]=[];a[d].push(l);sL(a)}
+function updL(id,u){const a=gL();for(const d in a){a[d]=a[d].filter(l=>l.id!==id);if(a[d].length===0)delete a[d]}const d=u.date;if(!a[d])a[d]=[];a[d].push(u);sL(a)}
+function delL(id){const a=gL();for(const d in a){a[d]=a[d].filter(l=>l.id!==id);if(a[d].length===0)delete a[d]}sL(a)}
+function refV(){curView==='day'?rDay():curView==='week'?rWeek():rMonth()}
+
+// ==================== 弹窗：添加/编辑课程 ====================
+function openAdd(tm){
+  editingId=null;$('lesson-title').textContent='添加课程';$('del-lesson-btn').style.display='none';$('lid').value='';$('l-date').value=curDate;
+  if(tm){const r=r2h(tm);$('l-start').value=r;$('l-end').value=m2t(t2m(r)+30)}else{$('l-start').value='';$('l-end').value=''}
+  $('l-student').value='';$('l-type').value='一对一';$('l-location').value='';$('l-notes').value='';$('l-recurring').value='0';$('l-deducted').checked=true;
+  $('l-fee').value='';$('l-venue-fee').value='';$('recurring-fg').style.display='block';upStList();upLocList();upVFList();$('lesson-mo').classList.remove('h');setTimeout(()=>$('l-student').focus(),300)
+}
+function openEdit(id){
+  const a=gL();let l=null;for(const d in a){const f=a[d].find(x=>x.id===id);if(f){l=f;break}}if(!l)return;
+  editingId=id;$('lesson-title').textContent='编辑课程';$('del-lesson-btn').style.display='block';$('lid').value=id;$('l-date').value=l.date;$('l-start').value=l.startTime;$('l-end').value=l.endTime;$('l-student').value=l.student;$('l-type').value=l.type||'一对一';$('l-location').value=l.location||'';$('l-notes').value=l.notes||'';$('l-recurring').value='0';$('l-deducted').checked=l.deducted!==false; // default true for new, preserve for edit
+  $('l-fee').value=l.fee||'';$('l-venue-fee').value=l.venueFee||'';upStList();upLocList();upVFList();$('lesson-mo').classList.remove('h')
+}
+function closeLesson(){$('lesson-mo').classList.add('h');editingId=null}
+function upStList(){const st=gS();$('stu-list').innerHTML=st.map(s=>'<option value="'+esc(s.name)+'">').join('')}
+function upLocList(){const a=gL(),set=new Set();for(const d in a)a[d].forEach(l=>{if(l.location)set.add(l.location)});$('loc-list').innerHTML=Array.from(set).map(l=>'<option value="'+esc(l)+'">').join('')}
+function upVFList(){const vs=gVF();$('vfee-list').innerHTML=vs.map(v=>'<option value="'+v.price+'">'+esc(v.name)+' ¥'+v.price+'</option>').join('')}
+function adjDeduction(student,oldDeducted,newDeducted){
+  const stu=gSt(student);if(!stu)return;
+  const remain=(stu.totalLessons||0)-(stu.usedLessons||0);
+  if(!oldDeducted&&newDeducted){
+    // 之前没扣→现在要扣
+    if(remain<=0){toast('⚠️ '+student+' 剩余课时不足，无法扣减');return false}
+    updSt(student,{usedLessons:(stu.usedLessons||0)+1});toast('已消耗 '+student+' 1课时');return true
+  }else if(oldDeducted&&!newDeducted){
+    // 之前扣了→现在取消扣（缺勤请假）
+    updSt(student,{usedLessons:Math.max(0,(stu.usedLessons||0)-1)});toast('已归还 '+student+' 1课时（缺勤）');return true
+  }
+  return true
+}
+function saveLesson(){
+  const d=$('l-date').value,st=$('l-start').value,et=$('l-end').value,sn=$('l-student').value.trim(),tp=$('l-type').value,loc=$('l-location').value.trim(),nt=$('l-notes').value.trim();
+  const recWeeks=parseInt($('l-recurring').value)||0;
+  const recWeeksFinal=recWeeks===-1?(parseInt($('l-recur-custom').value)||0):recWeeks;
+  const fee=parseFloat($('l-fee').value)||0,venueFee=parseFloat($('l-venue-fee').value)||0,deducted=$('l-deducted').checked;
+  if(!d||!st||!et||!sn){toast('请填写完整信息（日期、时间、学员姓名）');return}if(st>=et){toast('结束时间必须晚于开始时间');return}
+  // 编辑时：获取旧的 deducted 状态
+  let oldDeducted=null;
+  if(editingId){const a=gL();for(const dd in a){const f=a[dd].find(x=>x.id===editingId);if(f){oldDeducted=f.deducted!==false;break}}}
+  // 先检查课时是否足够（新建且要扣 / 编辑时从未扣变扣）
+  if(!editingId&&deducted){const stu=gSt(sn);if(stu){const r=(stu.totalLessons||0)-(stu.usedLessons||0);if(r<=0){if(!confirm('⚠️ '+sn+' 剩余0课时，确定继续？（不会扣减课时）'))return}}}
+  // 保存课程
+  const ld={id:editingId||gid(),date:d,startTime:st,endTime:et,student:sn,type:tp,location:loc,notes:nt,fee,venueFee,deducted,recurring:false,createdAt:new Date().toISOString()};
+  if(editingId){updL(editingId,ld);toast('课程已更新')}else{addL(ld);toast('课程已添加')}
+  // 处理课时消耗（新建或编辑时状态变化）
+  if(sn){adjDeduction(sn,oldDeducted,deducted)}
+  // 重复课程
+  if(recWeeksFinal>0&&!editingId){const bd=new Date(d+'T00:00:00');for(let w=1;w<=recWeeksFinal;w++){const nx=new Date(bd);nx.setDate(bd.getDate()+w*7);const nxt=fD(nx);const nxl={...ld,id:gid(),date:nxt,recurring:false};addL(nxl)}toast('已添加课程及未来'+recWeeksFinal+'周重复课程（共'+(recWeeksFinal+1)+'节）')}
+  closeLesson();refV();const sts=gS();if(!sts.find(x=>x.name===sn)){sts.push({name:sn,totalLessons:0,usedLessons:0,pricePerLesson:0});sS(sts);upStMenu()}
+}
+function delLesson(){
+  if(!editingId)return;if(!confirm('确定要删除此课程吗？'))return;
+  const a=gL();let l=null;for(const d in a){const f=a[d].find(x=>x.id===editingId);if(f){l=f;break}}
+  if(!l){closeLesson();return}
+  // 如果该课程已消耗课时，删除时归还
+  if(l.deducted!==false&&l.student){const stu=gSt(l.student);if(stu){updSt(l.student,{usedLessons:Math.max(0,(stu.usedLessons||0)-1)});toast('已归还 '+l.student+' 1课时（删除课程）')}}
+  delL(editingId);toast('课程已删除');
+  closeLesson();refV()
+}
+
+// ==================== 学员管理 ====================
+function openStu(){$('stu-mo').classList.remove('h');rStList()}
+function closeStu(){$('stu-mo').classList.add('h')}
+function rStList(){
+  const st=gS(),c=$('stu-list-ct');
+  if(st.length===0){c.innerHTML='<div style="text-align:center;color:var(--text2);padding:20px;">还没有学员</div>';return}
+  c.innerHTML=st.map((s,i)=>{
+    const remain=(s.totalLessons||0)-(s.usedLessons||0);
+    return '<div class="si"><div class="si-info"><div class="si-name"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:'+BC[i%8]+';margin-right:8px"></span>'+esc(s.name)+'</div><div class="si-detail">总'+(s.totalLessons||0)+'课时 ｜ 已用'+(s.usedLessons||0)+'课时 ｜ '+(s.pricePerLesson?'¥'+s.pricePerLesson+'/节':'未设价格')+'</div></div><div class="si-remain">剩'+remain+'节</div><button class="del-btn" data-s="'+esc(s.name)+'">✕</button></div>'
+  }).join('');
+  // 点击学员名编辑
+  c.querySelectorAll('.si').forEach((el,i)=>{
+    el.addEventListener('click',e=>{if(e.target.closest('.del-btn'))return;const st2=gS();if(!st2[i])return;const s=st2[i];
+      const nn=prompt('修改学员名',s.name);if(nn&&nn.trim()&&nn.trim()!==s.name){st2[i].name=nn.trim();sS(st2);rStList();upStMenu();refV()}
+      const nt=prompt('修改总课时',String(s.totalLessons||0));if(nt!==null){st2[i].totalLessons=Math.max(0,parseInt(nt)||0);sS(st2);rStList()}
+      const np=prompt('修改课时费(元/节)',String(s.pricePerLesson||0));if(np!==null){st2[i].pricePerLesson=Math.max(0,parseInt(np)||0);sS(st2);rStList()}
+    })
+  });
+  c.querySelectorAll('.del-btn').forEach(b=>{b.addEventListener('click',e=>{e.stopPropagation();const n=b.dataset.s;if(!confirm('确定删除学员"'+n+'"？（课程不删除）'))return;sS(gS().filter(x=>x.name!==n));rStList();upStMenu();refV();toast('学员已删除')})})
+}
+function upStMenu(){
+  const c=$('stu-menu-list'),st=gS(),summary=$('stu-menu-summary');
+  if(st.length===0){summary.textContent='';c.innerHTML='';c.style.display='none';return}
+  summary.textContent='共'+st.length+'人 ▾';
+  c.innerHTML=st.map(s=>{const r=(s.totalLessons||0)-(s.usedLessons||0);return '<button class="smi" data-s="'+esc(s.name)+'">'+esc(s.name)+' <span style="color:var(--primary);font-weight:700">['+r+'节]</span></button>'}).join('')
+}
+
+// 学员管理：添加按钮
+$('add-stu-btn').addEventListener('click',()=>{
+  const n=$('new-stu-name').value.trim();if(!n){toast('请输入学员姓名');return}
+  const lessons=Math.max(0,parseInt($('new-stu-lessons').value)||0);
+  const price=parseInt($('new-stu-price').value)||0;
+  const st=gS();if(st.find(x=>x.name===n)){toast('该学员已存在');return}
+  st.push({name:n,totalLessons:lessons,usedLessons:0,pricePerLesson:price});sS(st);rStList();upStMenu();$('new-stu-name').value='';$('new-stu-lessons').value='';$('new-stu-price').value='0';toast('学员 "'+n+'" 已添加')
+});
+$('new-stu-name').addEventListener('keydown',e=>{if(e.key==='Enter')$('add-stu-btn').click()});
+
+// ==================== 菜单 ====================
+function openMenu(){$('sm').classList.remove('h');upStMenu();upBackupStatus()}
+function closeMenu(){$('sm').classList.add('h')}
+
+// ==================== 时间设置 ====================
+function openTS(){const s=gSet();$('t-start').value=s.dayStart;$('t-end').value=s.dayEnd;$('time-mo').classList.remove('h')}
+function closeTS(){$('time-mo').classList.add('h')}
+function saveTS(){const s=$('t-start').value,e=$('t-end').value;if(s>=e){toast('结束时间必须晚于开始时间');return}sSet({dayStart:s,dayEnd:e});closeTS();refV();toast('时段设置已保存')}
+
+// ==================== 场地费管理 ====================
+function openVF(){upVFTable();$('venue-mo').classList.remove('h')}
+function closeVF(){$('venue-mo').classList.add('h')}
+function upVFTable(){const vs=gVF(),c=$('v-list');c.innerHTML=vs.map((v,i)=>'<div class="si"><span>'+esc(v.name)+'  ¥'+v.price+'</span><button class="del-btn" data-i="'+i+'">✕</button></div>').join('');c.querySelectorAll('.del-btn').forEach(b=>{b.addEventListener('click',()=>{const idx=parseInt(b.dataset.i);const vs2=gVF();vs2.splice(idx,1);sVF(vs2);upVFTable();upVFList()})})}
+$('add-v-btn').addEventListener('click',()=>{const n=$('v-name').value.trim(),p=parseInt($('v-price').value)||0;if(!n){toast('请输入场地名称');return}const vs=gVF();vs.push({id:gid(),name:n,price:p});sVF(vs);$('v-name').value='';$('v-price').value='';upVFTable();upVFList();toast('场地已添加')});
+
+// ==================== 收益统计 ====================
+function openStats(){document.querySelector('.stats-period .btn-p').className='btn btn-s btn-sm';document.querySelector('.stats-period .btn').className='btn btn-p btn-sm';$('st-start').value='';$('st-end').value='';calcStats('week');$('stats-mo').classList.remove('h')}
+function closeStats(){$('stats-mo').classList.add('h')}
+function calcStats(period){
+  const now=new Date();let start,end;
+  if(period==='custom'){start=$('st-start').value;end=$('st-end').value;if(!start||!end){toast('请选择起始和结束日期');return}}else if(period==='week'){start=new Date(now);start.setDate(now.getDate()-now.getDay());start=fD(start);end=fD(now)}else if(period==='month'){start=fD(new Date(now.getFullYear(),now.getMonth(),1));end=fD(now)}else if(period==='3month'){start=new Date(now);start.setMonth(now.getMonth()-3);start=fD(start);end=fD(now)}
+  const all=gL();let count=0,tFee=0,tVFee=0;const byStu={};
+  for(const d in all){if(d>=start&&d<=end){all[d].forEach(l=>{count++;const f=l.fee||0,vf=l.venueFee||0;tFee+=f;tVFee+=vf;if(!byStu[l.student])byStu[l.student]={count:0,fee:0,venueFee:0};byStu[l.student].count++;byStu[l.student].fee+=f;byStu[l.student].venueFee+=vf})}}
+  $('st-count').textContent=count;$('st-fee').textContent='¥'+tFee;$('st-venue').textContent='¥'+tVFee;$('st-net').textContent='¥'+(tFee-tVFee);
+  const bd=$('st-breakdown');
+  const keys=Object.keys(byStu).sort((a,b)=>byStu[b].fee-byStu[a].fee);
+  if(keys.length===0){bd.innerHTML='<div style="color:var(--text2);padding:8px;">该时段暂无课程</div>';drawChart([]);return}
+  bd.innerHTML='<h4>按学员明细</h4>'+keys.map(k=>'<div class="stat-row"><span class="stat-name">'+esc(k)+'</span><span class="stat-val2">'+byStu[k].count+'节 ｜ +¥'+byStu[k].fee+(byStu[k].venueFee?' ｜ -¥'+byStu[k].venueFee:'')+'</span></div>').join('');
+  drawChart(Object.keys(all).filter(d=>d>=start&&d<=end).sort(),all,start,end)
+}
+// 统计周期切换
+document.querySelector('.stats-period').addEventListener('click',e=>{const btn=e.target.closest('.btn');if(!btn)return;document.querySelectorAll('.stats-period .btn').forEach(b=>{b.className='btn btn-s btn-sm'});btn.className='btn btn-p btn-sm';if(btn.dataset.period==='custom'){$('st-start').value='';$('st-end').value='';$('st-start').focus();return}calcStats(btn.dataset.period)});
+function onCustomDateChange(){const s=$('st-start').value,e=$('st-end').value;if(s&&e){document.querySelectorAll('.stats-period .btn').forEach(b=>{b.className='btn btn-s btn-sm'});document.querySelector('.stats-period [data-period=custom]').className='btn btn-p btn-sm';calcStats('custom')}}
+// 收益曲线图
+function drawChart(dates,all,startStr,endStr){
+  const c=$('st-chart');if(!c)return;const ctx=c.getContext('2d');const dpr=window.devicePixelRatio||1;
+  const W=c.parentElement.clientWidth-16||300;c.width=W*dpr;c.height=150*dpr;c.style.width=W+'px';c.style.height='150px';ctx.scale(dpr,dpr);
+  ctx.clearRect(0,0,W,150);
+  const pad={t:10,b:20,l:35,r:10};const cw=W-pad.l-pad.r,ch=150-pad.t-pad.b;
+  if(!dates.length)return;
+  // Group by week or month depending on range
+  const start=new Date(startStr+'T00:00:00'),end=new Date(endStr+'T00:00:00');
+  const days=(end-start)/(86400000);const groupBy=days>60?'month':'week';
+  const buckets={};const labels=[];
+  const s=new Date(start);while(s<=end){let key;if(groupBy==='month'){key=s.getFullYear()+'-'+String(s.getMonth()+1).padStart(2,'0');const nxt=new Date(s);nxt.setMonth(nxt.getMonth()+1);buckets[key]={fee:0,count:0};labels.push({key,mid:new Date(s.getFullYear(),s.getMonth(),15)})}else{const ws=new Date(s);ws.setDate(s.getDate()-s.getDay());key=fD(ws);const ne=new Date(ws);ne.setDate(ne.getDate()+7);buckets[key]={fee:0,count:0};labels.push({key,mid:new Date(ws)})}s.setDate(s.getDate()+(groupBy==='month'?31:7))}
+  // Fill from actual data
+  dates.forEach(d=>{if(!all[d])return;all[d].forEach(l=>{const f=l.fee||0;if(!f)return;const dd=new Date(d+'T00:00:00');let bk;if(groupBy==='month'){bk=dd.getFullYear()+'-'+String(dd.getMonth()+1).padStart(2,'0')}else{const ws2=new Date(dd);ws2.setDate(dd.getDate()-dd.getDay());bk=fD(ws2)}if(buckets[bk]){buckets[bk].fee+=f;buckets[bk].count++}})});
+  const vals=labels.map(l=>buckets[l.key]?.fee||0);const mx=Math.max(...vals,1);
+  // Draw axes
+  ctx.strokeStyle='#dadce0';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(pad.l,pad.t);ctx.lineTo(pad.l,pad.t+ch);ctx.lineTo(pad.l+cw,pad.t+ch);ctx.stroke();
+  // Draw line
+  if(vals.some(v=>v>0)){ctx.strokeStyle='#1a73e8';ctx.lineWidth=2;ctx.beginPath();vals.forEach((v,i)=>{const x=pad.l+(i+0.5)*cw/vals.length;const y=pad.t+ch-(v/mx)*(ch-10);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y)});ctx.stroke();ctx.fillStyle='rgba(26,115,232,0.1)';ctx.beginPath();ctx.moveTo(pad.l+(0.5)*cw/vals.length,pad.t+ch);vals.forEach((v,i)=>{const x=pad.l+(i+0.5)*cw/vals.length;const y=pad.t+ch-(v/mx)*(ch-10);ctx.lineTo(x,y)});ctx.lineTo(pad.l+(vals.length-0.5)*cw/vals.length,pad.t+ch);ctx.closePath();ctx.fill()
+    // Dots + labels
+    ctx.fillStyle='#1a73e8';vals.forEach((v,i)=>{const x=pad.l+(i+0.5)*cw/vals.length;const y=pad.t+ch-(v/mx)*(ch-10);ctx.beginPath();ctx.arc(x,y,3,0,Math.PI*2);ctx.fill();ctx.fillStyle='var(--text2)';ctx.font='9px sans-serif';ctx.textAlign='center';ctx.fillText('¥'+v,x,y-8);ctx.fillStyle='#1a73e8'})}
+  // X axis labels
+  ctx.fillStyle='#5f6368';ctx.font='9px sans-serif';ctx.textAlign='center';labels.forEach((l,i)=>{const x=pad.l+(i+0.5)*cw/vals.length;ctx.fillText(groupBy==='month'?l.key.slice(-2)+'月':l.key.slice(5),x,pad.t+ch+14)})}
+
+
+// ==================== 导入导出 ====================
+function expD(){
+  const d={version:2,exportedAt:new Date().toISOString(),lessons:gL(),students:gS(),settings:gSet(),venueFees:gVF()};
+  const j=JSON.stringify(d,null,2),bl=new Blob([j],{type:'application/json'}),u=URL.createObjectURL(bl),a=document.createElement('a');a.href=u;a.download='教练课表备份_'+fD(new Date())+'.json';document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(u);closeMenu();toast('课表已导出');
+  // 记录备份时间
+  localStorage.setItem('coach_last_backup',new Date().toISOString());upBackupStatus()
+}
+function openImp(){$('import-file').value='';$('import-data').value='';$('import-mo').classList.remove('h');closeMenu()}
+function closeImp(){$('import-mo').classList.add('h')}
+$('import-file').addEventListener('change',function(){const f=this.files[0];if(!f)return;const r=new FileReader();r.onload=function(e){$('import-data').value=e.target.result;toast('已读取文件: '+f.name)};r.readAsText(f)});
+function confirmImp(){
+  const t=$('import-data').value.trim();if(!t){toast('请粘贴要导入的数据');return}
+  try{const d=JSON.parse(t);if(!d.lessons||!d.students){toast('数据格式不正确');return}if(!confirm('导入将覆盖当前所有数据，确定继续吗？'))return;sL(d.lessons);sS(d.students);if(d.settings)sSet(d.settings);if(d.venueFees)sVF(d.venueFees);closeImp();refV();upStMenu();toast('课表导入成功')}catch(e){toast('数据格式错误，请检查')}
+}
+function clearAll(){if(!confirm('确定要清空所有排课数据吗？此操作不可恢复！'))return;if(!confirm('再次确认：真的要删除所有课程吗？'))return;localStorage.removeItem(DK);localStorage.removeItem(SK);localStorage.removeItem(SETK);localStorage.removeItem(VK);refV();upStMenu();closeMenu();toast('所有数据已清空')}
+function upBackupStatus(){
+  const s=$('backup-status');const t=localStorage.getItem('coach_last_backup');
+  if(!t){s.innerHTML='<span style="color:#ea4335">⚠️ 尚未备份过数据</span>';return}
+  const n=new Date(),b=new Date(t),days=Math.floor((n-b)/(86400000));
+  let txt,clr;if(days===0){txt='今天已备份 ✅';clr='#34a853'}else if(days===1){txt='昨天已备份 ✅';clr='#34a853'}else if(days<=7){txt=days+'天前备份 ⚠️';clr='#f9ab00'}else{txt=days+'天前备份 ❌ 建议立即导出';clr='#ea4335'}
+  s.innerHTML='<span style="color:'+clr+'">'+txt+'</span>'
+}
+// 内嵌测试数据
+const TEST_DATA={"version":2,"students":[{"name":"小A","totalLessons":24,"usedLessons":8,"pricePerLesson":200},{"name":"小B","totalLessons":12,"usedLessons":3,"pricePerLesson":150},{"name":"小C","totalLessons":36,"usedLessons":15,"pricePerLesson":180},{"name":"小D","totalLessons":20,"usedLessons":0,"pricePerLesson":220},{"name":"小E","totalLessons":10,"usedLessons":10,"pricePerLesson":160},{"name":"小F","totalLessons":30,"usedLessons":12,"pricePerLesson":200},{"name":"小明","totalLessons":16,"usedLessons":2,"pricePerLesson":250},{"name":"小红","totalLessons":8,"usedLessons":6,"pricePerLesson":180}],"lessons":{"2026-04-12":[{"startTime":"09:00","endTime":"10:30","student":"小A","type":"一对一","location":"场馆A","notes":"基础动作训练","fee":200,"venueFee":30,"deducted":true,"id":"test_01"},{"startTime":"14:00","endTime":"15:30","student":"小C","type":"一对一","location":"场馆A","notes":"发球练习","fee":180,"venueFee":30,"deducted":true,"id":"test_02"}],"2026-04-14":[{"startTime":"10:00","endTime":"11:30","student":"小B","type":"一对一","location":"场馆B","notes":"步法训练","fee":150,"venueFee":25,"deducted":true,"id":"test_03"}],"2026-04-16":[{"startTime":"16:00","endTime":"17:30","student":"小明","type":"一对一","location":"场馆A","notes":"高远球练习","fee":250,"venueFee":30,"deducted":true,"id":"test_04"}],"2026-04-19":[{"startTime":"09:00","endTime":"10:30","student":"小A","type":"一对一","location":"场馆A","notes":"网前技术","fee":200,"venueFee":30,"deducted":true,"id":"test_05"},{"startTime":"14:00","endTime":"16:00","student":"小F","type":"一对二","location":"场馆C","notes":"双打配合","fee":200,"venueFee":40,"deducted":true,"id":"test_06"}],"2026-04-21":[{"startTime":"10:00","endTime":"11:30","student":"小红","type":"一对一","location":"场馆A","notes":"基本动作","fee":180,"venueFee":30,"deducted":true,"id":"test_07"}],"2026-04-23":[{"startTime":"15:00","endTime":"16:30","student":"小C","type":"一对一","location":"场馆B","notes":"杀球练习","fee":180,"venueFee":25,"deducted":true,"id":"test_08"}],"2026-04-26":[{"startTime":"09:00","endTime":"10:30","student":"小E","type":"一对一","location":"场馆A","notes":"综合训练","fee":160,"venueFee":30,"deducted":true,"id":"test_09"},{"startTime":"11:00","endTime":"12:30","student":"小D","type":"一对一","location":"场馆A","notes":"体验课","fee":220,"venueFee":30,"deducted":false,"id":"test_10"}],"2026-05-03":[{"startTime":"09:00","endTime":"10:30","student":"小A","type":"一对一","location":"场馆A","notes":"步法巩固","fee":200,"venueFee":30,"deducted":true,"id":"test_11"},{"startTime":"14:00","endTime":"15:30","student":"小B","type":"一对一","location":"场馆A","notes":"接发球训练","fee":150,"venueFee":30,"deducted":true,"id":"test_12"}],"2026-05-05":[{"startTime":"10:00","endTime":"11:30","student":"小F","type":"一对一","location":"场馆C","notes":"体能训练","fee":200,"venueFee":40,"deducted":true,"id":"test_13"},{"startTime":"16:00","endTime":"17:30","student":"小红","type":"一对一","location":"场馆A","notes":"高远球","fee":180,"venueFee":30,"deducted":true,"id":"test_14"}],"2026-05-07":[{"startTime":"09:00","endTime":"10:30","student":"小明","type":"一对一","location":"场馆A","notes":"比赛战术","fee":250,"venueFee":30,"deducted":true,"id":"test_15"}],"2026-05-10":[{"startTime":"10:00","endTime":"12:00","student":"小C","type":"一对二","location":"场馆B","notes":"对抗练习","fee":180,"venueFee":25,"deducted":true,"id":"test_16"},{"startTime":"14:00","endTime":"15:30","student":"小E","type":"一对一","location":"场馆A","notes":"反手练习","fee":160,"venueFee":30,"deducted":true,"id":"test_17"}],"2026-05-14":[{"startTime":"15:00","endTime":"16:30","student":"小D","type":"一对一","location":"场馆A","notes":"正式第一节","fee":220,"venueFee":30,"deducted":true,"id":"test_18"}],"2026-05-17":[{"startTime":"09:00","endTime":"10:30","student":"小A","type":"一对一","location":"场馆A","notes":"吊球训练","fee":200,"venueFee":30,"deducted":true,"id":"test_19"},{"startTime":"11:00","endTime":"12:30","student":"小F","type":"一对一","location":"场馆A","notes":"平抽球","fee":200,"venueFee":30,"deducted":true,"id":"test_20"}],"2026-05-20":[{"startTime":"10:00","endTime":"11:30","student":"小B","type":"一对一","location":"场馆B","notes":"网前小球","fee":150,"venueFee":25,"deducted":true,"id":"test_21"}],"2026-05-24":[{"startTime":"09:00","endTime":"10:30","student":"小明","type":"一对一","location":"场馆A","notes":"步法专训","fee":250,"venueFee":30,"deducted":true,"id":"test_22"},{"startTime":"14:00","endTime":"15:30","student":"小红","type":"一对一","location":"场馆C","notes":"基础巩固","fee":180,"venueFee":40,"deducted":true,"id":"test_23"}],"2026-05-28":[{"startTime":"15:00","endTime":"16:30","student":"小C","type":"一对一","location":"场馆A","notes":"杀球进阶","fee":180,"venueFee":30,"deducted":true,"id":"test_24"}],"2026-06-01":[{"startTime":"09:00","endTime":"10:30","student":"小A","type":"一对一","location":"场馆A","notes":"综合能力提升","fee":200,"venueFee":30,"deducted":true,"id":"test_25"}],"2026-06-04":[{"startTime":"10:00","endTime":"11:30","student":"小D","type":"一对一","location":"场馆A","notes":"发球训练","fee":220,"venueFee":30,"deducted":true,"id":"test_26"},{"startTime":"16:00","endTime":"17:30","student":"小F","type":"一对一","location":"场馆B","notes":"防守练习","fee":200,"venueFee":25,"deducted":true,"id":"test_27"}],"2026-06-07":[{"startTime":"14:00","endTime":"15:30","student":"小B","type":"一对一","location":"场馆A","notes":"高远球进阶","fee":150,"venueFee":30,"deducted":true,"id":"test_28"}],"2026-06-11":[{"startTime":"09:00","endTime":"10:30","student":"小明","type":"一对一","location":"场馆A","notes":"杀球训练","fee":250,"venueFee":30,"deducted":true,"id":"test_29"},{"startTime":"15:00","endTime":"16:30","student":"小C","type":"一对一","location":"场馆C","notes":"比赛模拟","fee":180,"venueFee":40,"deducted":true,"id":"test_30"}],"2026-06-14":[{"startTime":"10:00","endTime":"11:30","student":"小E","type":"一对一","location":"场馆A","notes":"吊球练习","fee":160,"venueFee":30,"deducted":true,"id":"test_31"}],"2026-06-18":[{"startTime":"09:00","endTime":"10:30","student":"小A","type":"一对一","location":"场馆A","notes":"网前技术进阶","fee":200,"venueFee":30,"deducted":true,"id":"test_32"},{"startTime":"14:00","endTime":"15:30","student":"小红","type":"一对一","location":"场馆A","notes":"比赛意识","fee":180,"venueFee":30,"deducted":true,"id":"test_33"}],"2026-06-21":[{"startTime":"10:00","endTime":"11:30","student":"小F","type":"一对一","location":"场馆A","notes":"综合训练","fee":200,"venueFee":30,"deducted":true,"id":"test_34"}],"2026-06-25":[{"startTime":"15:00","endTime":"16:30","student":"小D","type":"一对一","location":"场馆B","notes":"步法进阶","fee":220,"venueFee":25,"deducted":true,"id":"test_35"}],"2026-06-28":[{"startTime":"09:00","endTime":"10:30","student":"小明","type":"一对一","location":"场馆A","notes":"战术分析","fee":250,"venueFee":30,"deducted":true,"id":"test_36"},{"startTime":"11:00","endTime":"12:30","student":"小C","type":"一对一","location":"场馆A","notes":"体能测试","fee":180,"venueFee":30,"deducted":true,"id":"test_37"}],"2026-07-02":[{"startTime":"10:00","endTime":"11:30","student":"小A","type":"一对一","location":"场馆A","notes":"暑假特训1","fee":200,"venueFee":30,"deducted":true,"id":"test_38"},{"startTime":"14:00","endTime":"15:30","student":"小B","type":"一对一","location":"场馆A","notes":"暑假提高","fee":150,"venueFee":30,"deducted":true,"id":"test_39"}],"2026-07-05":[{"startTime":"09:00","endTime":"10:30","student":"小F","type":"一对一","location":"场馆C","notes":"暑假特训2","fee":200,"venueFee":40,"deducted":true,"id":"test_40"}],"2026-07-09":[{"startTime":"10:00","endTime":"11:30","student":"小C","type":"一对一","location":"场馆A","notes":"暑假集训","fee":180,"venueFee":30,"deducted":true,"id":"test_41"},{"startTime":"16:00","endTime":"17:30","student":"小红","type":"一对一","location":"场馆A","notes":"暑假特训","fee":180,"venueFee":30,"deducted":true,"id":"test_42"}],"2026-07-13":[{"startTime":"09:00","endTime":"10:30","student":"小明","type":"一对一","location":"场馆A","notes":"比赛备战","fee":250,"venueFee":30,"deducted":true,"id":"test_43"}],"2026-07-16":[{"startTime":"14:00","endTime":"15:30","student":"小D","type":"一对一","location":"场馆A","notes":"综合提高","fee":220,"venueFee":30,"deducted":true,"id":"test_44"},{"startTime":"16:00","endTime":"17:30","student":"小E","type":"一对一","location":"场馆B","notes":"恢复训练","fee":160,"venueFee":25,"deducted":true,"id":"test_45"}],"2026-07-20":[{"startTime":"09:00","endTime":"10:30","student":"小A","type":"一对一","location":"场馆A","notes":"暑假特训3","fee":200,"venueFee":30,"deducted":true,"id":"test_46"}],"2026-07-23":[{"startTime":"10:00","endTime":"11:30","student":"小F","type":"一对一","location":"场馆A","notes":"体能加强","fee":200,"venueFee":30,"deducted":true,"id":"test_47"},{"startTime":"15:00","endTime":"16:30","student":"小B","type":"一对一","location":"场馆B","notes":"技术巩固","fee":150,"venueFee":25,"deducted":true,"id":"test_48"}],"2026-07-27":[{"startTime":"09:00","endTime":"10:30","student":"小明","type":"一对一","location":"场馆A","notes":"赛前冲刺","fee":250,"venueFee":30,"deducted":true,"id":"test_49"}],"2026-07-30":[{"startTime":"14:00","endTime":"15:30","student":"小C","type":"一对一","location":"场馆C","notes":"暑期考核","fee":180,"venueFee":40,"deducted":true,"id":"test_50"},{"startTime":"16:00","endTime":"17:30","student":"小A","type":"一对一","location":"场馆A","notes":"暑期总结","fee":200,"venueFee":30,"deducted":true,"id":"test_51"}],"2026-08-03":[{"startTime":"09:00","endTime":"10:30","student":"小D","type":"一对一","location":"场馆A","notes":"新学期准备","fee":220,"venueFee":30,"deducted":true,"id":"test_52"}],"2026-08-06":[{"startTime":"10:00","endTime":"11:30","student":"小F","type":"一对一","location":"场馆A","notes":"恢复训练","fee":200,"venueFee":30,"deducted":true,"id":"test_53"},{"startTime":"15:00","endTime":"16:30","student":"小红","type":"一对一","location":"场馆B","notes":"基本功复习","fee":180,"venueFee":25,"deducted":true,"id":"test_54"}],"2026-08-09":[{"startTime":"09:00","endTime":"10:30","student":"小A","type":"一对一","location":"场馆A","notes":"新动作教学","fee":200,"venueFee":30,"deducted":true,"id":"test_55"},{"startTime":"14:00","endTime":"15:30","student":"小B","type":"一对一","location":"场馆C","notes":"步伐进阶","fee":150,"venueFee":40,"deducted":true,"id":"test_56"}],"2026-08-12":[{"startTime":"10:00","endTime":"11:30","student":"小明","type":"一对一","location":"场馆A","notes":"战术演练","fee":250,"venueFee":30,"deducted":true,"id":"test_57"}]},"settings":{"dayStart":"06:00","dayEnd":"22:00"},"venueFees":[{"time":"场馆A-周一至周五-09:00-12:00","fee":30},{"time":"场馆A-周一至周五-14:00-18:00","fee":30},{"time":"场馆A-周末-09:00-12:00","fee":35},{"time":"场馆B-周一至周五-09:00-12:00","fee":25},{"time":"场馆B-周末-14:00-18:00","fee":30},{"time":"场馆C-全天-09:00-18:00","fee":40}]};
+function loadTestData(){if(!confirm('导入测试数据将覆盖当前所有数据，确定继续吗？'))return;sL(TEST_DATA.lessons);sS(TEST_DATA.students);sSet(TEST_DATA.settings);sVF(TEST_DATA.venueFees);closeMenu();refV();upStMenu();toast('测试数据导入成功！共57节课，8名学员')}
+
+// ==================== 导出 .ics 日历 ====================
+function expICS(){
+  const all=gL();const events=[];
+  for(const d in all){all[d].forEach(l=>{const ds=d.split('-');const st=l.startTime.split(':');const et=l.endTime.split(':');const start=new Date(parseInt(ds[0]),parseInt(ds[1])-1,parseInt(ds[2]),parseInt(st[0]),parseInt(st[1]));const end=new Date(parseInt(ds[0]),parseInt(ds[1])-1,parseInt(ds[2]),parseInt(et[0]),parseInt(et[1]));const fmt=d=>d.toISOString().replace(/[-:]/g,'').split('.')[0]+'Z';events.push('BEGIN:VEVENT\nDTSTART:'+fmt(start)+'\nDTEND:'+fmt(end)+'\nSUMMARY:'+l.student+' 羽毛球课\nDESCRIPTION:课程类型:'+(l.type||'')+'\\n地点:'+(l.location||'')+'\\n课时费:¥'+(l.fee||0)+'\\n场地费:¥'+(l.venueFee||0)+'\nLOCATION:'+(l.location||'')+'\nEND:VEVENT')})}
+  if(events.length===0){toast('暂无课程可导出');return}
+  const ics='BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//CoachSchedule//CN\n'+events.join('\n')+'\nEND:VCALENDAR';
+  const bl=new Blob([ics],{type:'text/calendar;charset=utf-8'}),u=URL.createObjectURL(bl),a=document.createElement('a');a.href=u;a.download='教练排课表_'+fD(new Date())+'.ics';document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(u);closeMenu();toast('日历文件已导出')
+}
+
+// ==================== 日期导航 ====================
+function prevDay(){const d=new Date(curDate+'T00:00:00');d.setDate(d.getDate()-(curView==='week'?7:curView==='month'?40:1));curDate=fD(d);curView==='week'?rWeek():curView==='month'?rMonth():swDay()}
+function nextDay(){const d=new Date(curDate+'T00:00:00');d.setDate(d.getDate()+(curView==='week'?7:curView==='month'?40:1));curDate=fD(d);curView==='week'?rWeek():curView==='month'?rMonth():swDay()}
+function goToday(){curDate=fD(new Date());curView==='day'?swDay():curView==='week'?swWeek():swMonth()}
+function esc(s){if(!s)return'';const d=document.createElement('div');d.textContent=s;return d.innerHTML}
+function toast(m){const e=document.querySelector('.toast');if(e)e.remove();const t=document.createElement('div');t.className='toast';t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),2000)}
+
+// ==================== 初始化 ====================
+document.addEventListener('DOMContentLoaded',()=>{
+  document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{t.dataset.v==='day'?swDay():t.dataset.v==='week'?swWeek():swMonth()}));
+  $('prev-day').addEventListener('click',prevDay);
+  $('next-day').addEventListener('click',nextDay);
+  $('today-btn').addEventListener('click',goToday);
+  $('menu-btn').addEventListener('click',openMenu);
+  $('close-sm').addEventListener('click',closeMenu);
+  $('sm-overlay').addEventListener('click',closeMenu);
+  $('add-btn').addEventListener('click',()=>{const n=new Date(),ts=String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');openAdd(r2h(ts))});
+  $('sc').addEventListener('click',e=>{const sl=e.target.closest('.ts');if(sl&&!e.target.closest('.lc'))openAdd(sl.dataset.time||undefined)});
+  $('close-lesson').addEventListener('click',closeLesson);
+  $('cancel-lesson').addEventListener('click',closeLesson);
+  $('lesson-mo').addEventListener('click',e=>{if(e.target===$('lesson-mo'))closeLesson()});
+  $('save-lesson').addEventListener('click',saveLesson);
+  $('del-lesson-btn').addEventListener('click',delLesson);
+  // 学员管理
+  $('m-students').addEventListener('click',()=>{closeMenu();openStu()});
+  $('close-stu').addEventListener('click',closeStu);
+  $('stu-mo').addEventListener('click',e=>{if(e.target===$('stu-mo'))closeStu()});
+  // 时间设置
+  $('m-time').addEventListener('click',()=>{closeMenu();openTS()});
+  $('close-time').addEventListener('click',closeTS);
+  $('time-mo').addEventListener('click',e=>{if(e.target===$('time-mo'))closeTS()});
+  $('save-time').addEventListener('click',saveTS);
+  // 场地费
+  $('m-venue').addEventListener('click',()=>{closeMenu();openVF()});
+  $('close-venue').addEventListener('click',closeVF);
+  $('venue-mo').addEventListener('click',e=>{if(e.target===$('venue-mo'))closeVF()});
+  // 统计
+  $('m-stats').addEventListener('click',()=>{closeMenu();openStats()});
+  $('close-stats').addEventListener('click',closeStats);
+  $('stats-mo').addEventListener('click',e=>{if(e.target===$('stats-mo'))closeStats()});
+  // 导入导出
+  $('m-export').addEventListener('click',expD);
+  $('m-import').addEventListener('click',openImp);
+  $('m-test-data').addEventListener('click',loadTestData);
+  $('close-import').addEventListener('click',closeImp);
+  $('import-mo').addEventListener('click',e=>{if(e.target===$('import-mo'))closeImp()});
+  $('confirm-import').addEventListener('click',confirmImp);
+  $('m-ical').addEventListener('click',expICS);
+  $('m-clear').addEventListener('click',clearAll);
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeLesson();closeStu();closeTS();closeVF();closeStats();closeImp();closeMenu()}});
+  // 学员名变更自动填充价格
+  $('l-student').addEventListener('change',function(){const n=this.value.trim();if(!n)return;const stu=gSt(n);if(stu&&stu.pricePerLesson&&!$('l-fee').value)$('l-fee').value=stu.pricePerLesson});
+  // 定时期提醒检查
+  setInterval(chkReminder,60000);
+  swDay();upStMenu();
+  // 检查备份提醒（7天以上未备份弹窗提醒）
+  (function(){const t=localStorage.getItem('coach_last_backup');if(!t){setTimeout(()=>{if(confirm('⚠️ 你还没有备份过数据\n建议定期导出课表，防止手机数据丢失\n现在去备份？')){openMenu();setTimeout(()=>toast('点击「导出课表」下载备份文件'),500)}},1000);return}const n=new Date(),b=new Date(t),days=Math.floor((n-b)/(86400000));if(days>=7){setTimeout(()=>{toast('⚠️ 已'+days+'天未备份，建议导出课表')},2000)}})();
+  // 学员列表展开/收起
+  $('stu-menu-toggle').addEventListener('click',function(){
+    const list=$('stu-menu-list'),summary=$('stu-menu-summary');
+    if(list.style.display==='none'){list.style.display='block';summary.textContent=summary.textContent.replace('▾','▴')}
+    else{list.style.display='none';summary.textContent=summary.textContent.replace('▴','▾')}
+  });
+  // 重复课程自定义切换
+  $('l-recurring').addEventListener('change',function(){
+    $('l-recur-custom').style.display=this.value==='-1'?'inline-block':'none'
+  });
+});
+</script>
+</body>
+</html>
