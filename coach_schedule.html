@@ -197,6 +197,7 @@ let deferredPrompt;window.addEventListener('beforeinstallprompt',e=>{e.preventDe
 <button class="mb-btn" id="m-test-data">🧪 导入测试数据</button>
 <button class="mb-btn" id="m-ical">📅 导出日历(.ics)</button>
 <button class="mb-btn" id="m-clear">🗑️ 清空所有数据</button>
+<button class="mb-btn" id="m-help">📖 使用说明</button>
 </div>
 <div class="ms"><small data-keep>数据自动保存在手机本地</small><div id="backup-status" style="font-size:12px;color:var(--text2);margin-top:4px"></div></div>
 </div>
@@ -654,6 +655,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   $('confirm-import').addEventListener('click',confirmImp);
   $('m-ical').addEventListener('click',expICS);
   $('m-clear').addEventListener('click',clearAll);
+  $('m-help').addEventListener('click',()=>{closeMenu();window.open('使用说明.html','_blank')});
   document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeLesson();closeStu();closeTS();closeVF();closeStats();closeImp();closeMenu()}});
   // 学员名变更自动填充价格
   $('l-student').addEventListener('change',function(){const n=this.value.trim();if(!n)return;const stu=gSt(n);if(stu&&stu.pricePerLesson&&!$('l-fee').value)$('l-fee').value=stu.pricePerLesson});
